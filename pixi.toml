@@ -1,0 +1,18 @@
+[workspace]
+channels = ["https://repo.prefix.dev/meta-forge", "conda-forge"]
+name = "gst"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[dependencies]
+python-lmdb = "*"
+pyzmq = "*"
+openmpi = "*"
+mpi4py = "*"
+
+[pypi-dependencies]
+neopyter = "*"
+matplotlib = "*"
+pandas = "*"
+
+[activation.env]
