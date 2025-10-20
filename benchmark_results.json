@@ -3,7 +3,7 @@
     "backend": "LMDB",
     "data_size": 10,
     "rank": 0,
-    "write_time": 3.5037002817261964e-05,
+    "write_time": 3.128000025753863e-05,
     "read_time": 0.0,
     "read_count": 0,
     "avg_read_time": 0.0
@@ -12,7 +12,16 @@
     "backend": "SharedMemory",
     "data_size": 10,
     "rank": 0,
-    "write_time": 2.723199941101484e-05,
+    "write_time": 2.320500061614439e-05,
+    "read_time": 0.0,
+    "read_count": 0,
+    "avg_read_time": 0.0
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 10,
+    "rank": 0,
+    "write_time": 0.0015527489995292854,
     "read_time": 0.0,
     "read_count": 0,
     "avg_read_time": 0.0
@@ -21,7 +30,7 @@
     "backend": "LMDB",
     "data_size": 100,
     "rank": 0,
-    "write_time": 4.7341000026790425e-05,
+    "write_time": 5.332199725671671e-05,
     "read_time": 0.0,
     "read_count": 0,
     "avg_read_time": 0.0
@@ -30,7 +39,16 @@
     "backend": "SharedMemory",
     "data_size": 100,
     "rank": 0,
-    "write_time": 5.3481999202631414e-05,
+    "write_time": 4.229099795338698e-05,
+    "read_time": 0.0,
+    "read_count": 0,
+    "avg_read_time": 0.0
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 100,
+    "rank": 0,
+    "write_time": 0.012835567998990882,
     "read_time": 0.0,
     "read_count": 0,
     "avg_read_time": 0.0
@@ -39,7 +57,7 @@
     "backend": "LMDB",
     "data_size": 1000,
     "rank": 0,
-    "write_time": 0.0003632670013757888,
+    "write_time": 0.00039509799898951314,
     "read_time": 0.0,
     "read_count": 0,
     "avg_read_time": 0.0
@@ -48,7 +66,16 @@
     "backend": "SharedMemory",
     "data_size": 1000,
     "rank": 0,
-    "write_time": 0.0004114399998798035,
+    "write_time": 0.00033086400071624666,
+    "read_time": 0.0,
+    "read_count": 0,
+    "avg_read_time": 0.0
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 1000,
+    "rank": 0,
+    "write_time": 0.12472444700324559,
     "read_time": 0.0,
     "read_count": 0,
     "avg_read_time": 0.0
@@ -57,7 +84,7 @@
     "backend": "LMDB",
     "data_size": 10000,
     "rank": 0,
-    "write_time": 0.007985231000930071,
+    "write_time": 0.010424893000163138,
     "read_time": 0.0,
     "read_count": 0,
     "avg_read_time": 0.0
@@ -66,7 +93,16 @@
     "backend": "SharedMemory",
     "data_size": 10000,
     "rank": 0,
-    "write_time": 0.004363452000688994,
+    "write_time": 0.01031950999822584,
+    "read_time": 0.0,
+    "read_count": 0,
+    "avg_read_time": 0.0
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 10000,
+    "rank": 0,
+    "write_time": 1.49740711600316,
     "read_time": 0.0,
     "read_count": 0,
     "avg_read_time": 0.0
@@ -76,71 +112,323 @@
     "data_size": 10,
     "rank": 1,
     "write_time": 0.0,
-    "read_time": 0.00027088999922852963,
+    "read_time": 0.0003072990002692677,
     "read_count": 100,
-    "avg_read_time": 2.7088999922852964e-06
+    "avg_read_time": 3.0729900026926773e-06
   },
   {
     "backend": "SharedMemory",
     "data_size": 10,
     "rank": 1,
     "write_time": 0.0,
-    "read_time": 0.0003800589984166436,
+    "read_time": 0.0003760309991776012,
     "read_count": 100,
-    "avg_read_time": 3.800589984166436e-06
+    "avg_read_time": 3.760309991776012e-06
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 10,
+    "rank": 1,
+    "write_time": 0.0,
+    "read_time": 0.00025621099848649465,
+    "read_count": 100,
+    "avg_read_time": 2.5621099848649466e-06
   },
   {
     "backend": "LMDB",
     "data_size": 100,
     "rank": 1,
     "write_time": 0.0,
-    "read_time": 0.0026189740019617602,
+    "read_time": 0.0017132970024249516,
     "read_count": 100,
-    "avg_read_time": 2.6189740019617602e-05
+    "avg_read_time": 1.7132970024249518e-05
   },
   {
     "backend": "SharedMemory",
     "data_size": 100,
     "rank": 1,
     "write_time": 0.0,
-    "read_time": 0.002547378000599565,
+    "read_time": 0.0017917479999596253,
     "read_count": 100,
-    "avg_read_time": 2.547378000599565e-05
+    "avg_read_time": 1.7917479999596254e-05
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 100,
+    "rank": 1,
+    "write_time": 0.0,
+    "read_time": 0.0017485749995103106,
+    "read_count": 100,
+    "avg_read_time": 1.7485749995103107e-05
   },
   {
     "backend": "LMDB",
     "data_size": 1000,
     "rank": 1,
     "write_time": 0.0,
-    "read_time": 0.022061077997932443,
+    "read_time": 0.020311583000875544,
     "read_count": 100,
-    "avg_read_time": 0.00022061077997932444
+    "avg_read_time": 0.00020311583000875543
   },
   {
     "backend": "SharedMemory",
     "data_size": 1000,
     "rank": 1,
     "write_time": 0.0,
-    "read_time": 0.020676711003034143,
+    "read_time": 0.019397498999751406,
     "read_count": 100,
-    "avg_read_time": 0.00020676711003034143
+    "avg_read_time": 0.00019397498999751406
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 1000,
+    "rank": 1,
+    "write_time": 0.0,
+    "read_time": 0.01885495800161152,
+    "read_count": 100,
+    "avg_read_time": 0.0001885495800161152
   },
   {
     "backend": "LMDB",
     "data_size": 10000,
     "rank": 1,
     "write_time": 0.0,
-    "read_time": 0.2787433020021126,
+    "read_time": 0.31877526199969,
     "read_count": 100,
-    "avg_read_time": 0.002787433020021126
+    "avg_read_time": 0.0031877526199968996
   },
   {
     "backend": "SharedMemory",
     "data_size": 10000,
     "rank": 1,
     "write_time": 0.0,
-    "read_time": 0.24481696899965755,
+    "read_time": 0.34633759599819314,
     "read_count": 100,
-    "avg_read_time": 0.0024481696899965755
+    "avg_read_time": 0.0034633759599819315
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 10000,
+    "rank": 1,
+    "write_time": 0.0,
+    "read_time": 0.32349858399902587,
+    "read_count": 100,
+    "avg_read_time": 0.003234985839990259
+  },
+  {
+    "backend": "LMDB",
+    "data_size": 10,
+    "rank": 2,
+    "write_time": 0.0,
+    "read_time": 0.0002944150000985246,
+    "read_count": 100,
+    "avg_read_time": 2.9441500009852463e-06
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 10,
+    "rank": 2,
+    "write_time": 0.0,
+    "read_time": 0.0003783549982472323,
+    "read_count": 100,
+    "avg_read_time": 3.783549982472323e-06
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 10,
+    "rank": 2,
+    "write_time": 0.0,
+    "read_time": 0.0002585059992270544,
+    "read_count": 100,
+    "avg_read_time": 2.585059992270544e-06
+  },
+  {
+    "backend": "LMDB",
+    "data_size": 100,
+    "rank": 2,
+    "write_time": 0.0,
+    "read_time": 0.0017144090015790425,
+    "read_count": 100,
+    "avg_read_time": 1.7144090015790426e-05
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 100,
+    "rank": 2,
+    "write_time": 0.0,
+    "read_time": 0.0017789630001061596,
+    "read_count": 100,
+    "avg_read_time": 1.7789630001061595e-05
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 100,
+    "rank": 2,
+    "write_time": 0.0,
+    "read_time": 0.0017200709989992902,
+    "read_count": 100,
+    "avg_read_time": 1.7200709989992902e-05
+  },
+  {
+    "backend": "LMDB",
+    "data_size": 1000,
+    "rank": 2,
+    "write_time": 0.0,
+    "read_time": 0.02005239500067546,
+    "read_count": 100,
+    "avg_read_time": 0.0002005239500067546
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 1000,
+    "rank": 2,
+    "write_time": 0.0,
+    "read_time": 0.019114375998469768,
+    "read_count": 100,
+    "avg_read_time": 0.0001911437599846977
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 1000,
+    "rank": 2,
+    "write_time": 0.0,
+    "read_time": 0.01855473199975677,
+    "read_count": 100,
+    "avg_read_time": 0.0001855473199975677
+  },
+  {
+    "backend": "LMDB",
+    "data_size": 10000,
+    "rank": 2,
+    "write_time": 0.0,
+    "read_time": 0.30653434400301194,
+    "read_count": 100,
+    "avg_read_time": 0.0030653434400301194
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 10000,
+    "rank": 2,
+    "write_time": 0.0,
+    "read_time": 0.3287808400018548,
+    "read_count": 100,
+    "avg_read_time": 0.003287808400018548
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 10000,
+    "rank": 2,
+    "write_time": 0.0,
+    "read_time": 0.3225587609995273,
+    "read_count": 100,
+    "avg_read_time": 0.003225587609995273
+  },
+  {
+    "backend": "LMDB",
+    "data_size": 10,
+    "rank": 3,
+    "write_time": 0.0,
+    "read_time": 0.00029816200185450725,
+    "read_count": 100,
+    "avg_read_time": 2.9816200185450724e-06
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 10,
+    "rank": 3,
+    "write_time": 0.0,
+    "read_time": 0.0003751500007638242,
+    "read_count": 100,
+    "avg_read_time": 3.751500007638242e-06
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 10,
+    "rank": 3,
+    "write_time": 0.0,
+    "read_time": 0.0002590379990579095,
+    "read_count": 100,
+    "avg_read_time": 2.5903799905790947e-06
+  },
+  {
+    "backend": "LMDB",
+    "data_size": 100,
+    "rank": 3,
+    "write_time": 0.0,
+    "read_time": 0.0017058230005204678,
+    "read_count": 100,
+    "avg_read_time": 1.7058230005204676e-05
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 100,
+    "rank": 3,
+    "write_time": 0.0,
+    "read_time": 0.0017718799972499255,
+    "read_count": 100,
+    "avg_read_time": 1.7718799972499256e-05
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 100,
+    "rank": 3,
+    "write_time": 0.0,
+    "read_time": 0.0017203610004798975,
+    "read_count": 100,
+    "avg_read_time": 1.7203610004798973e-05
+  },
+  {
+    "backend": "LMDB",
+    "data_size": 1000,
+    "rank": 3,
+    "write_time": 0.0,
+    "read_time": 0.01994619100150885,
+    "read_count": 100,
+    "avg_read_time": 0.00019946191001508852
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 1000,
+    "rank": 3,
+    "write_time": 0.0,
+    "read_time": 0.019087885000772076,
+    "read_count": 100,
+    "avg_read_time": 0.00019087885000772077
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 1000,
+    "rank": 3,
+    "write_time": 0.0,
+    "read_time": 0.01840422299937927,
+    "read_count": 100,
+    "avg_read_time": 0.0001840422299937927
+  },
+  {
+    "backend": "LMDB",
+    "data_size": 10000,
+    "rank": 3,
+    "write_time": 0.0,
+    "read_time": 0.30111516599936294,
+    "read_count": 100,
+    "avg_read_time": 0.0030111516599936293
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 10000,
+    "rank": 3,
+    "write_time": 0.0,
+    "read_time": 0.33138967500053695,
+    "read_count": 100,
+    "avg_read_time": 0.0033138967500053696
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 10000,
+    "rank": 3,
+    "write_time": 0.0,
+    "read_time": 0.32694072899903404,
+    "read_count": 100,
+    "avg_read_time": 0.0032694072899903406
   }
 ]

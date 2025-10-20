@@ -66,14 +66,22 @@ class BenchmarkResult:
         }
 
 
-def benchmark_write(backend: IPCBackend, data: dict[str, Any]) -> float:
+def benchmark_write(
+    backend: IPCBackend, data: dict[str, Any], num_messages: int = 1
+) -> float:
     """Benchmark write operation.
+
+    Args:
+        backend: IPC backend to test
+        data: Data to write
+        num_messages: Number of messages to send (for message-passing backends like ZMQ)
 
     Returns:
         Write time in seconds
     """
     start = time.perf_counter()
-    backend.write(data)
+    for _ in range(num_messages):
+        backend.write(data)
     return time.perf_counter() - start
 
 
@@ -139,10 +147,24 @@ def run_benchmark(
     comm.Barrier()
 
     if is_writer:
-
         # Benchmark write
         logger.info("Writing data...")
-        result.write_time = benchmark_write(backend, test_data)
+
+        # ZMQ is message-passing: send iterations * num_readers messages
+        if backend.get_name() == "ZeroMQ":
+            num_readers = size - 1
+            num_messages = iterations * num_readers
+            logger.info(
+                "ZMQ: Sending %d messages (%d readers * %d iterations)",
+                num_messages,
+                num_readers,
+                iterations,
+            )
+            result.write_time = benchmark_write(backend, test_data, num_messages)
+        else:
+            # Shared storage: write once
+            result.write_time = benchmark_write(backend, test_data)
+
         logger.info("Write completed in %.4f seconds", result.write_time)
 
         # Signal readers that data is ready
@@ -192,7 +214,7 @@ def main():
     backends: list[IPCBackend] = [
         LMDBBackend(),
         SharedMemoryBackend(),
-        # ZMQBackend(),  # Note: ZMQ PUSH/PULL may need different test pattern
+        ZMQBackend(),
     ]
 
     all_results: list[BenchmarkResult] = []

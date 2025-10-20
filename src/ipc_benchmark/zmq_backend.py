@@ -11,11 +11,28 @@ import zmq
 from .base import IPCBackend
 from .utils import deserialize, serialize
 
+
+class _RankFilter(logging.Filter):
+    """Ensure rank field exists in log records."""
+
+    def filter(self, record):
+        if not hasattr(record, "rank"):
+            record.rank = -1
+        return True
+
+
 logger = logging.getLogger(__name__)
+logger.addFilter(_RankFilter())
 
 
 class ZMQBackend(IPCBackend):
-    """IPC backend using ZeroMQ with IPC transport."""
+    """IPC backend using ZeroMQ with IPC transport (PUSH/PULL pattern).
+
+    Note: Unlike SharedMemory/LMDB, ZMQ is a message-passing system.
+    Each message is consumed once. For benchmarking, this means:
+    - Write sends N messages (where N = number of read iterations)
+    - Each read consumes one message
+    """
 
     def __init__(self):
         self._context: zmq.Context | None = None
@@ -38,16 +55,16 @@ class ZMQBackend(IPCBackend):
             # Writer uses PUSH socket
             self._socket = self._context.socket(zmq.PUSH)
             self._socket.bind(self._ipc_path)
-            logger.info("ZMQ writer bound to %s", self._ipc_path)
+            logger.info("ZMQ PUSH socket bound to %s", self._ipc_path)
             # Give readers time to connect
-            time.sleep(0.1)
+            time.sleep(0.2)
         else:
             # Reader uses PULL socket
             self._socket = self._context.socket(zmq.PULL)
             self._socket.connect(self._ipc_path)
-            # Set receive timeout to avoid blocking indefinitely
-            self._socket.setsockopt(zmq.RCVTIMEO, 1000)  # 1 second
-            logger.info("ZMQ reader connected to %s", self._ipc_path)
+            # Set receive timeout
+            self._socket.setsockopt(zmq.RCVTIMEO, 2000)  # 2 seconds
+            logger.info("ZMQ PULL socket connected to %s", self._ipc_path)
 
     def write(self, data: dict[str, Any]) -> None:
         if not self._socket:
