@@ -10,7 +10,18 @@ import lmdb
 from .base import IPCBackend
 from .utils import deserialize, serialize
 
+
+class _RankFilter(logging.Filter):
+    """Ensure rank field exists in log records."""
+
+    def filter(self, record):
+        if not hasattr(record, "rank"):
+            record.rank = -1
+        return True
+
+
 logger = logging.getLogger(__name__)
+logger.addFilter(_RankFilter())
 
 
 class LMDBBackend(IPCBackend):

@@ -1,0 +1,146 @@
+[
+  {
+    "backend": "LMDB",
+    "data_size": 10,
+    "rank": 0,
+    "write_time": 3.5037002817261964e-05,
+    "read_time": 0.0,
+    "read_count": 0,
+    "avg_read_time": 0.0
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 10,
+    "rank": 0,
+    "write_time": 2.723199941101484e-05,
+    "read_time": 0.0,
+    "read_count": 0,
+    "avg_read_time": 0.0
+  },
+  {
+    "backend": "LMDB",
+    "data_size": 100,
+    "rank": 0,
+    "write_time": 4.7341000026790425e-05,
+    "read_time": 0.0,
+    "read_count": 0,
+    "avg_read_time": 0.0
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 100,
+    "rank": 0,
+    "write_time": 5.3481999202631414e-05,
+    "read_time": 0.0,
+    "read_count": 0,
+    "avg_read_time": 0.0
+  },
+  {
+    "backend": "LMDB",
+    "data_size": 1000,
+    "rank": 0,
+    "write_time": 0.0003632670013757888,
+    "read_time": 0.0,
+    "read_count": 0,
+    "avg_read_time": 0.0
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 1000,
+    "rank": 0,
+    "write_time": 0.0004114399998798035,
+    "read_time": 0.0,
+    "read_count": 0,
+    "avg_read_time": 0.0
+  },
+  {
+    "backend": "LMDB",
+    "data_size": 10000,
+    "rank": 0,
+    "write_time": 0.007985231000930071,
+    "read_time": 0.0,
+    "read_count": 0,
+    "avg_read_time": 0.0
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 10000,
+    "rank": 0,
+    "write_time": 0.004363452000688994,
+    "read_time": 0.0,
+    "read_count": 0,
+    "avg_read_time": 0.0
+  },
+  {
+    "backend": "LMDB",
+    "data_size": 10,
+    "rank": 1,
+    "write_time": 0.0,
+    "read_time": 0.00027088999922852963,
+    "read_count": 100,
+    "avg_read_time": 2.7088999922852964e-06
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 10,
+    "rank": 1,
+    "write_time": 0.0,
+    "read_time": 0.0003800589984166436,
+    "read_count": 100,
+    "avg_read_time": 3.800589984166436e-06
+  },
+  {
+    "backend": "LMDB",
+    "data_size": 100,
+    "rank": 1,
+    "write_time": 0.0,
+    "read_time": 0.0026189740019617602,
+    "read_count": 100,
+    "avg_read_time": 2.6189740019617602e-05
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 100,
+    "rank": 1,
+    "write_time": 0.0,
+    "read_time": 0.002547378000599565,
+    "read_count": 100,
+    "avg_read_time": 2.547378000599565e-05
+  },
+  {
+    "backend": "LMDB",
+    "data_size": 1000,
+    "rank": 1,
+    "write_time": 0.0,
+    "read_time": 0.022061077997932443,
+    "read_count": 100,
+    "avg_read_time": 0.00022061077997932444
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 1000,
+    "rank": 1,
+    "write_time": 0.0,
+    "read_time": 0.020676711003034143,
+    "read_count": 100,
+    "avg_read_time": 0.00020676711003034143
+  },
+  {
+    "backend": "LMDB",
+    "data_size": 10000,
+    "rank": 1,
+    "write_time": 0.0,
+    "read_time": 0.2787433020021126,
+    "read_count": 100,
+    "avg_read_time": 0.002787433020021126
+  },
+  {
+    "backend": "SharedMemory",
+    "data_size": 10000,
+    "rank": 1,
+    "write_time": 0.0,
+    "read_time": 0.24481696899965755,
+    "read_count": 100,
+    "avg_read_time": 0.0024481696899965755
+  }
+]

@@ -1,5 +1,4 @@
 """MPI benchmark for comparing IPC backends."""
-
 import json
 import logging
 import sys
@@ -16,9 +15,27 @@ from ipc_benchmark import LMDBBackend, SharedMemoryBackend, ZMQBackend
 from ipc_benchmark.base import IPCBackend
 from ipc_benchmark.utils import generate_test_dict
 
+
+class MPIRankFilter(logging.Filter):
+    """Add MPI rank to all log records."""
+
+    def __init__(self):
+        super().__init__()
+        self.rank = -1
+
+    def filter(self, record):
+        record.rank = self.rank
+        return True
+
+
+# Global filter instance
+_rank_filter = MPIRankFilter()
+
 logging.basicConfig(
     level=logging.INFO, format="[Rank %(rank)s] %(levelname)s: %(message)s"
 )
+# Add filter to root logger
+logging.getLogger().addFilter(_rank_filter)
 
 
 class BenchmarkResult:
@@ -32,6 +49,11 @@ class BenchmarkResult:
         self.read_time: float = 0.0
         self.read_count: int = 0
 
+    @property
+    def avg_read_time(self) -> float:
+        """Average read time per operation."""
+        return self.read_time / self.read_count if self.read_count > 0 else 0.0
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "backend": self.backend_name,
@@ -40,7 +62,7 @@ class BenchmarkResult:
             "write_time": self.write_time,
             "read_time": self.read_time,
             "read_count": self.read_count,
-            "avg_read_time": self.read_time / self.read_count if self.read_count > 0 else 0,
+            "avg_read_time": self.avg_read_time,
         }
 
 
@@ -94,18 +116,29 @@ def run_benchmark(
     result = BenchmarkResult(backend.get_name(), data_size, rank)
     is_writer = rank == 0
 
-    # Initialize backend
-    backend.initialize(f"bench_{data_size}", is_writer)
-
     comm = MPI.COMM_WORLD
 
     if is_writer:
+        # Writer initializes first
+        backend.initialize(f"bench_{data_size}", is_writer)
+
         # Generate test data
         logger.info("Generating test data (%d entries)...", data_size)
         test_data = generate_test_dict(data_size)
 
-        # Wait for readers to initialize
+        # Signal readers that backend is ready
         comm.Barrier()
+    else:
+        # Readers wait for writer to initialize backend
+        comm.Barrier()
+
+        # Now readers can safely attach
+        backend.initialize(f"bench_{data_size}", is_writer)
+
+    # Additional barrier to ensure all processes are initialized
+    comm.Barrier()
+
+    if is_writer:
 
         # Benchmark write
         logger.info("Writing data...")
@@ -116,9 +149,6 @@ def run_benchmark(
         comm.Barrier()
 
     else:
-        # Wait for writer to initialize
-        comm.Barrier()
-
         # Wait for data to be written
         comm.Barrier()
 
@@ -144,6 +174,9 @@ def main():
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
+
+    # Set rank in logging filter
+    _rank_filter.rank = rank
 
     if size < 2:
         if rank == 0:
