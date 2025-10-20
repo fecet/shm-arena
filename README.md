@@ -58,7 +58,26 @@ pixi shell
 
 ## 运行测试
 
-### 基本用法
+### 使用 Pixi 任务（推荐）
+
+```bash
+# 标准测试（1 writer + 3 readers）
+pixi run bench
+
+# 小规模测试（1 writer + 1 reader）
+pixi run bench-small
+
+# 大规模测试（1 writer + 7 readers）
+pixi run bench-large
+
+# 分析结果并生成图表
+pixi run analyze
+
+# 清理残留文件
+pixi run clean
+```
+
+### 手动运行
 
 使用MPI运行测试, 需要至少2个进程(1个writer + 1个或多个readers):
 

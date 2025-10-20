@@ -16,3 +16,19 @@ matplotlib = "*"
 pandas = "*"
 
 [activation.env]
+
+[tasks]
+# Run benchmark with 2 processes (1 writer + 1 reader)
+bench-small = "mpiexec -n 2 python benchmark_mpi.py"
+
+# Run benchmark with 4 processes (1 writer + 3 readers) - recommended
+bench = "mpiexec -n 4 python benchmark_mpi.py"
+
+# Run benchmark with 8 processes (1 writer + 7 readers)
+bench-large = "mpiexec -n 8 python benchmark_mpi.py"
+
+# Analyze results and generate plots
+analyze = "python analyze_results.py"
+
+# Clean up shared memory and LMDB files
+clean = { cmd = "rm -rf /dev/shm/bench_* /tmp/lmdb_bench_* /tmp/zmq_bench_*.ipc 2>/dev/null || true" }
