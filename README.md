@@ -129,29 +129,31 @@ pixi run mpiexec -n 4 python benchmark_mpi.py \
 
 ### 场景1: 共享存储模式
 
-| Backend | 写入时间 | 平均读取 | 说明 |
-|---------|---------|---------|------|
-| **LMDB** | 5.13ms | 5.89ms | ✓ 最优: 写1次,读100次 |
-| **SharedMemory** | 20.08ms | 5.97ms | ✓ 最优: 写1次,读100次 |
-| **ZeroMQ** | 570.85ms | 5.74ms | ⚠️ 需发送100条消息 |
-| **MPI-Native** | 577.34ms | 5.76ms | ⚠️ 需100次 bcast |
+| Backend | 写入时间 | 平均读取 | 总读取数 | 说明 |
+|---------|---------|---------|----------|------|
+| **LMDB** | 0.16ms | 0.01ms | 100 | ✓ 最优: 写1次,读100次 |
+| **SharedMemory** | 0.23ms | 0.02ms | 100 | ✓ 最优: 写1次,读100次 |
+| **ZeroMQ** | 6.03ms | 0.10ms | 100 | ⚠️ 需发送100条消息 |
+| **MPI-Native** | 4.52ms | 0.04ms | 100 | ⚠️ 需100次 bcast |
 
 **关键发现**:
-- **读取性能相近** (< 5%): 反序列化是主要瓶颈,传输机制影响小
-- **写入性能差异显著**: 共享存储 vs 消息传递的架构差异
+- **共享存储型后端占优**: LMDB 和 SharedMemory 写入时间极短（< 0.3ms）
+- **消息传递型较慢**: ZeroMQ 和 MPI 需要重复发送，写入时间高出 20-30 倍
+- **读取性能差异小**: 所有后端读取时间在同一量级（0.01-0.10ms）
 
 ### 场景2: 流式传输模式
 
-| Backend | 写入时间 | 平均读取 | 吞吐量 |
-|---------|---------|---------|--------|
-| **LMDB** | ~500ms | 5.89ms | ~170 msg/s |
-| **SharedMemory** | ~2000ms | 5.97ms | ~167 msg/s |
-| **ZeroMQ** | 570ms | 5.74ms | ✓ 175 msg/s |
-| **MPI-Native** | 577ms | 5.76ms | ✓ 173 msg/s |
+| Backend | 写入时间 | 平均读取 | 总读取数 | 吞吐量 |
+|---------|---------|---------|----------|--------|
+| **LMDB** | 1.30ms | 0.01ms | 100 | ✓ 94,797 msg/s |
+| **SharedMemory** | 1.24ms | 0.01ms | 100 | ✓ 76,376 msg/s |
+| **ZeroMQ** | 5.56ms | 0.11ms | 100 | 8,871 msg/s |
+| **MPI-Native** | 4.54ms | 0.07ms | 100 | 14,066 msg/s |
 
 **关键发现**:
-- **消息传递型后端** 在流式场景下写入效率更高
-- **共享存储型后端** 需重复写覆盖,产生额外开销
+- **共享存储型意外领先**: LMDB 和 SharedMemory 在流式场景下吞吐量最高
+- **写入时间相近**: 所有后端写入时间在 1-6ms 范围内
+- **吞吐量差异显著**: 共享内存方案比消息传递快 5-10 倍（本测试配置下）
 
 ## 选择建议
 
@@ -179,8 +181,13 @@ pixi run mpiexec -n 4 python benchmark_mpi.py \
 
 ### 性能优先级
 
-**共享存储场景**: LMDB ≈ SharedMemory >> ZeroMQ ≈ MPI
-**流式传输场景**: ZeroMQ ≈ MPI >> SharedMemory > LMDB
+**共享存储场景**: LMDB ≈ SharedMemory >> MPI-Native > ZeroMQ
+**流式传输场景**: LMDB > SharedMemory >> MPI-Native > ZeroMQ
+
+**注意**:
+- 在小规模测试（2进程）中，共享内存方案在两种场景下均表现优异
+- 消息传递方案的优势可能在大规模多进程（>10 readers）场景下体现
+- 实际性能受数据大小、进程数量、网络拓扑等因素影响，建议根据实际场景测试
 
 ## 分析结果
 
@@ -244,12 +251,19 @@ comm.Barrier()  # 所有进程到达此点后才继续
 ### 场景实现差异
 
 **共享存储场景**:
-- 共享存储型: Writer 写1次 → Readers 重复读同一份数据
-- 消息传递型: Writer 参与 N 次集体通信 → Readers 接收 N 次
+- **LMDB/SharedMemory**: Writer 写1次 → Readers 重复读同一份数据
+- **ZeroMQ**: Writer 发送 N × M 条消息 (M = reader 数量) → 每个 Reader 消费 N 条
+- **MPI-Native**: Writer 存储数据后参与 N 次 broadcast → Readers 参与 N 次 broadcast 接收
 
 **流式传输场景**:
-- 共享存储型: Writer 写 N 次(覆盖) → Readers 读 N 次
-- 消息传递型: Writer 发送 N × M 条消息 (M = reader 数量) → 每个 Reader 消费 N 条
+- **LMDB/SharedMemory**: Writer 写 N 次(覆盖) → Readers 读 N 次
+- **ZeroMQ**: Writer 发送 N × M 条消息 (M = reader 数量) → 每个 Reader 消费 N 条
+- **MPI-Native**: Writer 执行 N 次 broadcast → Readers 参与 N 次 broadcast 接收
+
+**关键区别**:
+- MPI broadcast 是**集体操作**，所有进程必须同时参与
+- ZeroMQ 使用 PUSH/PULL 模式，消息在 readers 间**轮流分配**
+- MPI broadcast 将**相同数据**发送给所有 readers
 
 ## 贡献
 

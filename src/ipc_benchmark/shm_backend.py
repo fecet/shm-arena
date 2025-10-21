@@ -115,6 +115,38 @@ class SharedMemoryBackend(IPCBackend):
         )
         return deserialize(serialized)
 
+    def write_bytes(self, data: bytes) -> None:
+        if not self._shm:
+            raise RuntimeError("Backend not initialized")
+
+        data_size = len(data)
+
+        if data_size + self.HEADER_SIZE > self._size:
+            raise ValueError(
+                f"Data too large: {data_size} bytes (max: {self._size - self.HEADER_SIZE})"
+            )
+
+        # Read current version
+        _, current_version = self._read_header()
+
+        # Write data
+        self._shm.buf[self.HEADER_SIZE : self.HEADER_SIZE + data_size] = data
+
+        # Update header with new size and incremented version
+        self._write_header(data_size, current_version + 1)
+
+    def read_bytes(self) -> bytes | None:
+        if not self._shm:
+            raise RuntimeError("Backend not initialized")
+
+        data_size, version = self._read_header()
+
+        if data_size == 0:
+            return None
+
+        # Read data
+        return bytes(self._shm.buf[self.HEADER_SIZE : self.HEADER_SIZE + data_size])
+
     def cleanup(self) -> None:
         if self._shm:
             self._shm.close()

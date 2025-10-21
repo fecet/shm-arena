@@ -94,6 +94,50 @@ class MPIBackend(IPCBackend):
             # Deserialize using same method as other backends
             return deserialize(serialized)
 
+    def write_bytes(self, data: bytes) -> None:
+        """Broadcast pre-serialized bytes immediately (writer side).
+
+        For MPI backend, this immediately performs a broadcast operation.
+        All readers must call read_bytes() to participate in the same broadcast.
+        Also stores data for potential future broadcasts (shared scenario).
+
+        Args:
+            data: Pre-serialized bytes to transmit
+        """
+        if not self._comm:
+            raise RuntimeError("Backend not initialized")
+
+        if not self._is_writer:
+            raise RuntimeError("Only writer can call write_bytes()")
+
+        # Store data for future broadcasts (shared scenario)
+        self._serialized_data = data
+
+        # Immediately broadcast (collective operation - writer side)
+        self._comm.bcast(data, root=0)
+
+    def read_bytes(self) -> bytes | None:
+        """Receive broadcast bytes (reader side) OR participate in broadcast (writer side).
+
+        For MPI backend, this participates in a broadcast operation.
+        - Writer: sends the last written data via bcast
+        - Reader: receives data via bcast
+
+        Returns:
+            Raw bytes from broadcast, or None for writer
+        """
+        if not self._comm:
+            raise RuntimeError("Backend not initialized")
+
+        if self._is_writer:
+            # Writer participates in broadcast (sends previously stored data)
+            # This is used in shared scenario where same data is broadcast multiple times
+            self._comm.bcast(self._serialized_data, root=0)
+            return None
+        else:
+            # Reader participates in broadcast (receives data)
+            return self._comm.bcast(None, root=0)
+
     def cleanup(self) -> None:
         """Clean up resources.
 

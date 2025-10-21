@@ -84,6 +84,22 @@ class ZMQBackend(IPCBackend):
             # Timeout - no data available
             return None
 
+    def write_bytes(self, data: bytes) -> None:
+        if not self._socket:
+            raise RuntimeError("Backend not initialized")
+
+        self._socket.send(data)
+
+    def read_bytes(self) -> bytes | None:
+        if not self._socket:
+            raise RuntimeError("Backend not initialized")
+
+        try:
+            return self._socket.recv()
+        except zmq.Again:
+            # Timeout - no data available
+            return None
+
     def cleanup(self) -> None:
         if self._socket:
             self._socket.close()

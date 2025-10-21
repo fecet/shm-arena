@@ -20,7 +20,7 @@ from ipc_benchmark import (
     ZMQBackend,
 )
 from ipc_benchmark.base import IPCBackend
-from ipc_benchmark.utils import generate_test_dict
+from ipc_benchmark.utils import deserialize, generate_test_dict, serialize
 
 
 class MPIRankFilter(logging.Filter):
@@ -57,6 +57,8 @@ class BenchmarkResult:
         self.write_time: float = 0.0
         self.read_time: float = 0.0
         self.read_count: int = 0
+        self.serialize_time: float = 0.0
+        self.deserialize_time: float = 0.0
 
     @property
     def avg_read_time(self) -> float:
@@ -79,6 +81,8 @@ class BenchmarkResult:
             "read_count": self.read_count,
             "avg_read_time": self.avg_read_time,
             "throughput": self.throughput,
+            "serialize_time": self.serialize_time,
+            "deserialize_time": self.deserialize_time,
         }
 
 
@@ -116,9 +120,21 @@ def run_scenario_shared(
     comm.Barrier()
 
     if is_writer:
+        # Serialize once (measure separately)
+        logger.info("Serializing data...")
+        ser_start = time.perf_counter()
+        serialized_data = serialize(data)
+        result.serialize_time = time.perf_counter() - ser_start
+        logger.info("Serialization completed in %.6f seconds", result.serialize_time)
+
+        # Write (pure transport)
         logger.info("Writing data once (shared storage scenario)...")
         start = time.perf_counter()
-        backend.write(data)
+        # For MPI: just store data, don't broadcast yet (collective ops happen later)
+        if backend.get_name() == "MPI-Native":
+            backend._serialized_data = serialized_data  # Store for later broadcasts
+        else:
+            backend.write_bytes(serialized_data)
         result.write_time = time.perf_counter() - start
 
         logger.info("Write completed in %.4f seconds", result.write_time)
@@ -133,7 +149,7 @@ def run_scenario_shared(
             )
             coll_start = time.perf_counter()
             for _ in range(iterations):
-                backend.read()  # Trigger bcast
+                backend.read_bytes()  # Trigger bcast
             result.write_time += time.perf_counter() - coll_start
         # For ZeroMQ: send iterations * num_readers messages
         elif backend.get_name() == "ZeroMQ":
@@ -147,7 +163,7 @@ def run_scenario_shared(
             )
             coll_start = time.perf_counter()
             for _ in range(num_messages - 1):  # -1 because we already sent one
-                backend.write(data)
+                backend.write_bytes(serialized_data)
             result.write_time += time.perf_counter() - coll_start
 
     else:
@@ -155,12 +171,19 @@ def run_scenario_shared(
         comm.Barrier()
 
         logger.info("Reading data %d times (shared storage scenario)...", iterations)
+        # Read (pure transport)
         start = time.perf_counter()
         for _ in range(iterations):
-            read_data = backend.read()
-            if read_data is not None:
+            raw_bytes = backend.read_bytes()
+            if raw_bytes is not None:
                 result.read_count += 1
         result.read_time = time.perf_counter() - start
+
+        # Deserialize once (measure separately)
+        if result.read_count > 0:
+            deser_start = time.perf_counter()
+            _ = deserialize(raw_bytes)
+            result.deserialize_time = time.perf_counter() - deser_start
 
         logger.info(
             "Read completed: %d/%d successful (%.4f seconds total, %.6f seconds avg)",
@@ -214,30 +237,58 @@ def run_scenario_streaming(
     comm.Barrier()
 
     if is_writer:
+        # Serialize once (measure separately)
+        logger.info("Serializing data...")
+        ser_start = time.perf_counter()
+        serialized_data = serialize(data)
+        result.serialize_time = time.perf_counter() - ser_start
+        logger.info("Serialization completed in %.6f seconds", result.serialize_time)
+
         logger.info("Streaming %d messages to %d readers...", iterations, num_readers)
         start = time.perf_counter()
 
         # For streaming backends: send iterations * num_readers messages
         # For shared storage: just write iterations times (overwrite)
+        # For MPI: broadcast is 1-to-N, so only send iterations times (not * num_readers)
         if backend.supports_streaming():
-            num_messages = iterations * num_readers
+            if backend.get_name() == "MPI-Native":
+                # MPI broadcast sends to ALL readers at once
+                num_messages = iterations
+            else:
+                # ZeroMQ distributes messages round-robin to readers
+                num_messages = iterations * num_readers
+
             for i in range(num_messages):
-                backend.write(data)
+                backend.write_bytes(serialized_data)
         else:
             for i in range(iterations):
-                backend.write(data)
+                backend.write_bytes(serialized_data)
 
         result.write_time = time.perf_counter() - start
         logger.info("Streaming completed in %.4f seconds", result.write_time)
 
     else:
         logger.info("Consuming %d messages (streaming scenario)...", iterations)
+        # Read (pure transport)
         start = time.perf_counter()
+        raw_bytes = None
+
+        # All backends read iterations times
+        # - MPI: participate in iterations broadcasts
+        # - ZeroMQ: receive iterations messages (distributed among readers)
+        # - Shared storage: read iterations times (same data)
         for _ in range(iterations):
-            read_data = backend.read()
-            if read_data is not None:
+            raw_bytes = backend.read_bytes()
+            if raw_bytes is not None:
                 result.read_count += 1
+
         result.read_time = time.perf_counter() - start
+
+        # Deserialize once (measure separately)
+        if result.read_count > 0 and raw_bytes is not None:
+            deser_start = time.perf_counter()
+            _ = deserialize(raw_bytes)
+            result.deserialize_time = time.perf_counter() - deser_start
 
         logger.info(
             "Consumed: %d/%d messages (%.4f seconds, %.1f msg/s)",

@@ -36,6 +36,24 @@ class IPCBackend(ABC):
         pass
 
     @abstractmethod
+    def write_bytes(self, data: bytes) -> None:
+        """Write raw bytes to shared storage (for pure transport benchmarking).
+
+        Args:
+            data: Pre-serialized bytes to transmit
+        """
+        pass
+
+    @abstractmethod
+    def read_bytes(self) -> bytes | None:
+        """Read raw bytes from shared storage (for pure transport benchmarking).
+
+        Returns:
+            Raw bytes from shared storage, or None if unavailable
+        """
+        pass
+
+    @abstractmethod
     def cleanup(self) -> None:
         """Release all resources and clean up."""
         pass

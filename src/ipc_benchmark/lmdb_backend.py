@@ -77,6 +77,20 @@ class LMDBBackend(IPCBackend):
                 return None
             return deserialize(serialized)
 
+    def write_bytes(self, data: bytes) -> None:
+        if not self._env:
+            raise RuntimeError("Backend not initialized")
+
+        with self._env.begin(write=True) as txn:
+            txn.put(b"data", data)
+
+    def read_bytes(self) -> bytes | None:
+        if not self._env:
+            raise RuntimeError("Backend not initialized")
+
+        with self._env.begin() as txn:
+            return txn.get(b"data")
+
     def cleanup(self) -> None:
         if self._env:
             self._env.close()
