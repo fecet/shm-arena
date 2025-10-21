@@ -14,7 +14,6 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 from ipc_benchmark import (
     LMDBBackend,
     MPIBackend,
-    MPIPkl5Backend,
     SharedMemoryBackend,
     ZMQBackend,
 )
@@ -167,7 +166,7 @@ def run_benchmark(
                 iterations,
             )
             result.write_time = benchmark_write(backend, test_data, num_messages)
-        elif backend.get_name() in ("MPI-Native", "MPI-Pkl5"):
+        elif backend.get_name() == "MPI-Native":
             # MPI uses collective communication: write once, broadcast during read
             result.write_time = benchmark_write(backend, test_data, 1)
         else:
@@ -180,7 +179,7 @@ def run_benchmark(
         comm.Barrier()
 
         # MPI writer must participate in broadcast (by calling read)
-        if backend.get_name() in ("MPI-Native", "MPI-Pkl5"):
+        if backend.get_name() == "MPI-Native":
             logger.info("Participating in MPI broadcast (%d iterations)...", iterations)
             start = time.perf_counter()
             for _ in range(iterations):
@@ -233,7 +232,6 @@ def main():
         SharedMemoryBackend(),
         ZMQBackend(),
         MPIBackend(),
-        MPIPkl5Backend(),
     ]
 
     all_results: list[BenchmarkResult] = []

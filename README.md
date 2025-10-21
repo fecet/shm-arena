@@ -13,11 +13,9 @@
 │   ├── lmdb_backend.py      # LMDB 实现
 │   ├── shm_backend.py       # SharedMemory 实现
 │   ├── zmq_backend.py       # ZeroMQ 实现
-│   ├── mpi_backend.py       # MPI-Native 实现
-│   └── mpi_pkl5_backend.py  # MPI-Pkl5 实现（不推荐）
+│   └── mpi_backend.py       # MPI-Native 实现
 ├── benchmark_mpi.py         # MPI 测试主程序
 ├── analyze_results.py       # 结果分析
-├── PERFORMANCE.md           # 📊 详细性能分析
 ├── pixi.toml                # Pixi 环境配置
 └── README.md                # 本文档
 ```
@@ -35,9 +33,6 @@ pixi run bench-large        # 大规模（1 writer + 7 readers）
 
 # 分析结果
 pixi run analyze
-
-# 查看详细性能分析
-cat PERFORMANCE.md
 ```
 
 ## Benchmark 结果
@@ -52,7 +47,6 @@ cat PERFORMANCE.md
 | **SharedMemory** | 20.08ms | 5.97ms | 标准库，零拷贝 |
 | **ZeroMQ** | 570.85ms | 5.74ms | 消息传递 |
 | **MPI-Native** | 577.34ms | 5.76ms | MPI 集体通信 |
-| **MPI-Pkl5** | 603.46ms | 6.03ms | Pkl5 无优势 |
 
 ### 核心发现
 
@@ -72,8 +66,6 @@ cat PERFORMANCE.md
 - 写入时间 = reader数量 × 迭代次数 × 单条消息时间
 - ✅ 适合单 reader 流式传输
 
-📊 **详细分析** → [PERFORMANCE.md](./PERFORMANCE.md)
-
 ## 使用建议
 
 **根据功能需求选择：**
@@ -84,7 +76,6 @@ cat PERFORMANCE.md
 | **SharedMemory** | 无外部依赖 | Python 标准库，多 reader 高效 |
 | **MPI-Native** | HPC/分布式 | 跨节点通信，已有 MPI 环境 |
 | **ZeroMQ** | 流式传输 | 灵活通信模式，单 reader 场景 |
-| ~~MPI-Pkl5~~ | ❌ 不推荐 | 无性能优势，增加复杂度 |
 
 ## 故障排除
 
