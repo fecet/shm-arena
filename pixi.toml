@@ -18,17 +18,36 @@ pandas = "*"
 [activation.env]
 
 [tasks]
-# Run benchmark with 2 processes (1 writer + 1 reader)
-bench-small = "mpiexec -n 2 python benchmark_mpi.py"
+# ============================================================================
+# Full benchmark (both scenarios, all backends)
+# ============================================================================
+bench = "mpiexec -n 4 python benchmark_mpi.py --scenario both"
+bench-small = "mpiexec -n 2 python benchmark_mpi.py --scenario both"
+bench-large = "mpiexec -n 8 python benchmark_mpi.py --scenario both"
 
-# Run benchmark with 4 processes (1 writer + 3 readers) - recommended
-bench = "mpiexec -n 4 python benchmark_mpi.py"
+# ============================================================================
+# Scenario-specific benchmarks
+# ============================================================================
+# Shared storage scenario: write once, read N times (optimal for LMDB/SharedMemory)
+bench-shared = "mpiexec -n 4 python benchmark_mpi.py --scenario shared"
 
-# Run benchmark with 8 processes (1 writer + 7 readers)
-bench-large = "mpiexec -n 8 python benchmark_mpi.py"
+# Streaming scenario: continuous message passing (optimal for ZeroMQ/MPI)
+bench-streaming = "mpiexec -n 4 python benchmark_mpi.py --scenario streaming"
 
-# Analyze results and generate plots
+# ============================================================================
+# Backend-specific benchmarks
+# ============================================================================
+bench-lmdb = "mpiexec -n 4 python benchmark_mpi.py --backend lmdb --scenario both"
+bench-shm = "mpiexec -n 4 python benchmark_mpi.py --backend shm --scenario both"
+bench-zmq = "mpiexec -n 4 python benchmark_mpi.py --backend zmq --scenario both"
+bench-mpi = "mpiexec -n 4 python benchmark_mpi.py --backend mpi --scenario both"
+
+# ============================================================================
+# Analysis
+# ============================================================================
 analyze = "python analyze_results.py"
 
-# Clean up shared memory and LMDB files
-clean = { cmd = "rm -rf /dev/shm/bench_* /tmp/lmdb_bench_* /tmp/zmq_bench_*.ipc 2>/dev/null || true" }
+# ============================================================================
+# Cleanup
+# ============================================================================
+clean = { cmd = "rm -rf /dev/shm/bench_* /tmp/lmdb_bench_* /tmp/zmq_bench_*.ipc benchmark_results.json benchmark_plots/ 2>/dev/null || true" }

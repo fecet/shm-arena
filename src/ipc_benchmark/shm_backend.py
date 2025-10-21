@@ -131,3 +131,7 @@ class SharedMemoryBackend(IPCBackend):
 
     def get_name(self) -> str:
         return "SharedMemory"
+
+    def supports_streaming(self) -> bool:
+        """SharedMemory uses shared storage model, not optimized for streaming."""
+        return False

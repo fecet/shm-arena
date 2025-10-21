@@ -1,4 +1,4 @@
-"""Analyze and visualize benchmark results."""
+"""Analyze and visualize benchmark results grouped by scenario."""
 
 import json
 from pathlib import Path
@@ -22,166 +22,171 @@ def load_results(filename: str = "benchmark_results.json") -> pd.DataFrame:
     return pd.DataFrame(data)
 
 
-def plot_write_performance(df: pd.DataFrame, output_dir: Path):
-    """Plot write performance comparison.
+def plot_scenario_comparison(df: pd.DataFrame, output_dir: Path):
+    """Plot performance comparison grouped by scenario.
 
     Args:
         df: Results DataFrame
         output_dir: Directory to save plots
     """
-    # Filter only writer results (rank 0)
-    write_df = df[df["rank"] == 0].copy()
+    scenarios = df["scenario"].unique()
 
-    if write_df.empty:
-        print("No write data found")
-        return
+    for scenario in scenarios:
+        scenario_df = df[df["scenario"] == scenario]
 
-    # Pivot for plotting
-    pivot = write_df.pivot(index="data_size", columns="backend", values="write_time")
+        # Write performance
+        write_df = scenario_df[scenario_df["rank"] == 0]
+        if not write_df.empty:
+            fig, ax = plt.subplots(figsize=(10, 6))
+            backends = write_df["backend"].unique()
+            write_times = [
+                write_df[write_df["backend"] == b]["write_time"].iloc[0] * 1000
+                for b in backends
+            ]
 
-    # Create plot
-    fig, ax = plt.subplots(figsize=(10, 6))
-    pivot.plot(kind="bar", ax=ax)
+            ax.bar(backends, write_times)
+            ax.set_ylabel("Write Time (ms)")
+            ax.set_title(f"Write Performance - {scenario.upper()} Scenario")
+            ax.grid(axis="y", alpha=0.3)
 
-    ax.set_xlabel("Dictionary Size (entries)")
-    ax.set_ylabel("Write Time (seconds)")
-    ax.set_title("Write Performance Comparison")
-    ax.legend(title="Backend")
-    ax.grid(axis="y", alpha=0.3)
+            plt.tight_layout()
+            output_file = output_dir / f"write_{scenario}.png"
+            plt.savefig(output_file, dpi=150)
+            print(f"Saved: {output_file}")
+            plt.close()
 
-    plt.tight_layout()
-    output_file = output_dir / "write_performance.png"
-    plt.savefig(output_file, dpi=150)
-    print(f"Saved: {output_file}")
-    plt.close()
+        # Read performance
+        read_df = scenario_df[scenario_df["rank"] != 0]
+        if not read_df.empty:
+            avg_read = (
+                read_df.groupby("backend")["avg_read_time"].mean().reset_index()
+            )
 
+            fig, ax = plt.subplots(figsize=(10, 6))
+            ax.bar(avg_read["backend"], avg_read["avg_read_time"] * 1000)
+            ax.set_ylabel("Avg Read Time (ms)")
+            ax.set_title(f"Read Performance - {scenario.upper()} Scenario")
+            ax.grid(axis="y", alpha=0.3)
 
-def plot_read_performance(df: pd.DataFrame, output_dir: Path):
-    """Plot read performance comparison.
+            plt.tight_layout()
+            output_file = output_dir / f"read_{scenario}.png"
+            plt.savefig(output_file, dpi=150)
+            print(f"Saved: {output_file}")
+            plt.close()
 
-    Args:
-        df: Results DataFrame
-        output_dir: Directory to save plots
-    """
-    # Filter only reader results (rank != 0)
-    read_df = df[df["rank"] != 0].copy()
+        # Throughput (streaming scenario only)
+        if scenario == "streaming" and not read_df.empty:
+            avg_throughput = (
+                read_df.groupby("backend")["throughput"].mean().reset_index()
+            )
 
-    if read_df.empty:
-        print("No read data found")
-        return
+            fig, ax = plt.subplots(figsize=(10, 6))
+            ax.bar(avg_throughput["backend"], avg_throughput["throughput"])
+            ax.set_ylabel("Throughput (msg/s)")
+            ax.set_title("Throughput - STREAMING Scenario")
+            ax.grid(axis="y", alpha=0.3)
 
-    # Calculate average read time per backend and data size
-    avg_read = (
-        read_df.groupby(["backend", "data_size"])["avg_read_time"]
-        .mean()
-        .reset_index()
-    )
-
-    # Pivot for plotting
-    pivot = avg_read.pivot(index="data_size", columns="backend", values="avg_read_time")
-
-    # Create plot
-    fig, ax = plt.subplots(figsize=(10, 6))
-    pivot.plot(kind="bar", ax=ax)
-
-    ax.set_xlabel("Dictionary Size (entries)")
-    ax.set_ylabel("Average Read Time (seconds)")
-    ax.set_title("Read Performance Comparison (averaged across readers)")
-    ax.legend(title="Backend")
-    ax.grid(axis="y", alpha=0.3)
-
-    plt.tight_layout()
-    output_file = output_dir / "read_performance.png"
-    plt.savefig(output_file, dpi=150)
-    print(f"Saved: {output_file}")
-    plt.close()
+            plt.tight_layout()
+            output_file = output_dir / "throughput_streaming.png"
+            plt.savefig(output_file, dpi=150)
+            print(f"Saved: {output_file}")
+            plt.close()
 
 
-def plot_throughput(df: pd.DataFrame, output_dir: Path):
-    """Plot throughput comparison.
-
-    Args:
-        df: Results DataFrame
-        output_dir: Directory to save plots
-    """
-    read_df = df[df["rank"] != 0].copy()
-
-    if read_df.empty:
-        print("No read data found")
-        return
-
-    # Calculate throughput (ops/sec)
-    read_df["throughput"] = read_df["read_count"] / read_df["read_time"]
-
-    # Average throughput per backend and data size
-    avg_throughput = (
-        read_df.groupby(["backend", "data_size"])["throughput"].mean().reset_index()
-    )
-
-    # Pivot for plotting
-    pivot = avg_throughput.pivot(
-        index="data_size", columns="backend", values="throughput"
-    )
-
-    # Create plot
-    fig, ax = plt.subplots(figsize=(10, 6))
-    pivot.plot(kind="bar", ax=ax)
-
-    ax.set_xlabel("Dictionary Size (entries)")
-    ax.set_ylabel("Throughput (reads/second)")
-    ax.set_title("Read Throughput Comparison")
-    ax.legend(title="Backend")
-    ax.grid(axis="y", alpha=0.3)
-
-    plt.tight_layout()
-    output_file = output_dir / "throughput.png"
-    plt.savefig(output_file, dpi=150)
-    print(f"Saved: {output_file}")
-    plt.close()
-
-
-def generate_summary_table(df: pd.DataFrame, output_dir: Path):
-    """Generate summary statistics table.
+def generate_scenario_summary(df: pd.DataFrame, output_dir: Path):
+    """Generate summary tables grouped by scenario.
 
     Args:
         df: Results DataFrame
         output_dir: Directory to save output
     """
-    # Write performance
-    write_df = df[df["rank"] == 0][["backend", "data_size", "write_time"]]
+    scenarios = df["scenario"].unique()
 
-    # Read performance
-    read_df = df[df["rank"] != 0].copy()
-    read_summary = (
-        read_df.groupby(["backend", "data_size"])
-        .agg(
-            {
-                "avg_read_time": ["mean", "std"],
-                "throughput": lambda x: (x.sum() if "throughput" in read_df.columns else 0),
-            }
-        )
-        .reset_index()
-    )
+    print("\n" + "=" * 70)
+    print("BENCHMARK RESULTS SUMMARY")
+    print("=" * 70)
 
-    # Save to CSV
-    write_file = output_dir / "write_summary.csv"
-    write_df.to_csv(write_file, index=False)
-    print(f"Saved: {write_file}")
+    for scenario in scenarios:
+        scenario_df = df[df["scenario"] == scenario]
 
-    read_file = output_dir / "read_summary.csv"
-    read_summary.to_csv(read_file, index=False)
-    print(f"Saved: {read_file}")
+        print(f"\n{'='*70}")
+        print(f"Scenario: {scenario.upper()}")
+        print(f"{'='*70}")
 
-    # Print to console
-    print("\n" + "=" * 60)
-    print("WRITE PERFORMANCE SUMMARY")
-    print("=" * 60)
-    print(write_df.to_string(index=False))
+        # Write performance
+        write_df = scenario_df[scenario_df["rank"] == 0][
+            ["backend", "data_size", "write_time"]
+        ]
 
-    print("\n" + "=" * 60)
-    print("READ PERFORMANCE SUMMARY")
-    print("=" * 60)
-    print(read_summary.to_string(index=False))
+        if not write_df.empty:
+            print("\nWrite Performance:")
+            print("-" * 70)
+            for _, row in write_df.iterrows():
+                print(
+                    f"  {row['backend']:15s}: {row['write_time']*1000:8.2f} ms "
+                    f"({row['data_size']} entries)"
+                )
+
+        # Read performance
+        read_df = scenario_df[scenario_df["rank"] != 0]
+        if not read_df.empty:
+            read_summary = (
+                read_df.groupby("backend")
+                .agg(
+                    {
+                        "avg_read_time": "mean",
+                        "read_count": "sum",
+                        "throughput": "mean",
+                    }
+                )
+                .reset_index()
+            )
+
+            print("\nRead Performance (averaged across readers):")
+            print("-" * 70)
+            for _, row in read_summary.iterrows():
+                print(
+                    f"  {row['backend']:15s}: {row['avg_read_time']*1000:8.2f} ms/read, "
+                    f"{int(row['read_count'])} total reads"
+                )
+                if scenario == "streaming":
+                    print(f"                      Throughput: {row['throughput']:.1f} msg/s")
+
+        # Save CSV
+        if not write_df.empty or not read_df.empty:
+            summary_file = output_dir / f"summary_{scenario}.csv"
+            scenario_df.to_csv(summary_file, index=False)
+            print(f"\nSaved detailed results to: {summary_file}")
+
+    # Cross-scenario comparison
+    print(f"\n{'='*70}")
+    print("CROSS-SCENARIO INSIGHTS")
+    print(f"{'='*70}")
+
+    backends = df["backend"].unique()
+    for backend in backends:
+        backend_df = df[df["backend"] == backend]
+        print(f"\n{backend}:")
+
+        for scenario in scenarios:
+            scenario_backend_df = backend_df[backend_df["scenario"] == scenario]
+
+            write_data = scenario_backend_df[scenario_backend_df["rank"] == 0]
+            read_data = scenario_backend_df[scenario_backend_df["rank"] != 0]
+
+            if not write_data.empty:
+                write_time = write_data["write_time"].iloc[0] * 1000
+                print(f"  {scenario:12s}: Write={write_time:8.2f}ms", end="")
+
+            if not read_data.empty:
+                avg_read = read_data["avg_read_time"].mean() * 1000
+                print(f", Read={avg_read:7.2f}ms", end="")
+
+                if scenario == "streaming":
+                    avg_throughput = read_data["throughput"].mean()
+                    print(f", Throughput={avg_throughput:6.1f}msg/s", end="")
+
+            print()
 
 
 def main():
@@ -198,7 +203,8 @@ def main():
     df = load_results(results_file)
 
     print(f"Loaded {len(df)} result records")
-    print(f"Backends: {df['backend'].unique()}")
+    print(f"Backends: {', '.join(df['backend'].unique())}")
+    print(f"Scenarios: {', '.join(df['scenario'].unique())}")
     print(f"Data sizes: {sorted(df['data_size'].unique())}")
     print(f"MPI ranks: {sorted(df['rank'].unique())}")
 
@@ -208,15 +214,15 @@ def main():
 
     # Generate plots
     print("\nGenerating plots...")
-    plot_write_performance(df, output_dir)
-    plot_read_performance(df, output_dir)
-    plot_throughput(df, output_dir)
+    plot_scenario_comparison(df, output_dir)
 
     # Generate summary tables
-    print("\nGenerating summary tables...")
-    generate_summary_table(df, output_dir)
+    print("\nGenerating summary...")
+    generate_scenario_summary(df, output_dir)
 
-    print(f"\nAnalysis complete! Results saved to {output_dir}/")
+    print(f"\n{'='*70}")
+    print(f"Analysis complete! Results saved to {output_dir}/")
+    print(f"{'='*70}")
 
 
 if __name__ == "__main__":

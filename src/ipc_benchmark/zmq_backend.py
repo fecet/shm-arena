@@ -104,3 +104,10 @@ class ZMQBackend(IPCBackend):
 
     def get_name(self) -> str:
         return "ZeroMQ"
+
+    def supports_streaming(self) -> bool:
+        return True
+
+    def prepare_stream(self, num_messages: int) -> None:
+        """Prepare for streaming transmission."""
+        logger.info("ZMQ prepared for streaming %d messages", num_messages)

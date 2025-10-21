@@ -1,0 +1,46 @@
+[
+  {
+    "backend": "ZeroMQ",
+    "data_size": 100,
+    "rank": 0,
+    "scenario": "shared",
+    "write_time": 0.00012372699893603567,
+    "read_time": 0.0,
+    "read_count": 0,
+    "avg_read_time": 0.0,
+    "throughput": 0.0
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 100,
+    "rank": 0,
+    "scenario": "streaming",
+    "write_time": 7.408199962810613e-05,
+    "read_time": 0.0,
+    "read_count": 0,
+    "avg_read_time": 0.0,
+    "throughput": 0.0
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 0,
+    "rank": 1,
+    "scenario": "shared",
+    "write_time": 0.0,
+    "read_time": 0.0003572130008251406,
+    "read_count": 5,
+    "avg_read_time": 7.144260016502812e-05,
+    "throughput": 13997.25090758259
+  },
+  {
+    "backend": "ZeroMQ",
+    "data_size": 0,
+    "rank": 1,
+    "scenario": "streaming",
+    "write_time": 0.0,
+    "read_time": 0.00011210499906155746,
+    "read_count": 5,
+    "avg_read_time": 2.2420999812311493e-05,
+    "throughput": 44601.04403778169
+  }
+]

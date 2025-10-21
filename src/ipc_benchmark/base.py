@@ -44,3 +44,20 @@ class IPCBackend(ABC):
     def get_name(self) -> str:
         """Get the backend implementation name."""
         pass
+
+    def supports_streaming(self) -> bool:
+        """Whether backend natively supports streaming mode.
+
+        Returns:
+            True if backend is optimized for message-passing (ZeroMQ, MPI).
+            False for shared storage backends (LMDB, SharedMemory).
+        """
+        return False
+
+    def prepare_stream(self, num_messages: int) -> None:
+        """Prepare for streaming transmission (optional optimization hook).
+
+        Args:
+            num_messages: Expected number of messages in stream
+        """
+        pass

@@ -91,3 +91,7 @@ class LMDBBackend(IPCBackend):
 
     def get_name(self) -> str:
         return "LMDB"
+
+    def supports_streaming(self) -> bool:
+        """LMDB uses shared storage model, not optimized for streaming."""
+        return False

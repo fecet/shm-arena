@@ -105,3 +105,12 @@ class MPIBackend(IPCBackend):
 
     def get_name(self) -> str:
         return "MPI-Native"
+
+    def supports_streaming(self) -> bool:
+        return True
+
+    def prepare_stream(self, num_messages: int) -> None:
+        """Prepare for streaming transmission."""
+        logger.info(
+            "MPI prepared for streaming %d messages (collective ops)", num_messages
+        )
