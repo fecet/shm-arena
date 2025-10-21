@@ -1,0 +1,107 @@
+"""MPI native communication-based IPC backend implementation."""
+
+import logging
+from typing import Any
+
+from mpi4py import MPI
+
+from .base import IPCBackend
+from .utils import deserialize, serialize
+
+
+class _RankFilter(logging.Filter):
+    """Ensure rank field exists in log records."""
+
+    def filter(self, record):
+        if not hasattr(record, "rank"):
+            record.rank = -1
+        return True
+
+
+logger = logging.getLogger(__name__)
+logger.addFilter(_RankFilter())
+
+
+class MPIBackend(IPCBackend):
+    """IPC backend using MPI's native communication primitives (bcast).
+
+    This backend uses MPI's collective communication (broadcast) to distribute
+    data from writer (rank 0) to all readers. Unlike shared storage backends,
+    MPI handles data transfer through the MPI runtime's optimized communication
+    layer.
+
+    Communication pattern:
+    - Writer serializes data and broadcasts bytes using comm.bcast()
+    - Readers participate in bcast to receive bytes and deserialize
+    - Each read() triggers a new broadcast operation
+    - Uses same serialize/deserialize as other backends for fair comparison
+    """
+
+    def __init__(self):
+        self._comm: MPI.Comm | None = None
+        self._name: str = ""
+        self._is_writer: bool = False
+        self._serialized_data: bytes | None = None
+
+    def initialize(self, name: str, is_writer: bool) -> None:
+        self._name = name
+        self._is_writer = is_writer
+        self._comm = MPI.COMM_WORLD
+
+        logger.info(
+            "MPI backend initialized (rank=%d, writer=%s)",
+            self._comm.Get_rank(),
+            is_writer,
+        )
+
+    def write(self, data: dict[str, Any]) -> None:
+        """Serialize and store data for later broadcast.
+
+        Unlike other backends, MPI broadcast is a collective operation.
+        This method serializes the data; actual broadcast happens in read().
+        """
+        if not self._comm:
+            raise RuntimeError("Backend not initialized")
+
+        if not self._is_writer:
+            raise RuntimeError("Only writer can call write()")
+
+        # Serialize data using same method as other backends
+        self._serialized_data = serialize(data)
+
+    def read(self) -> dict[str, Any] | None:
+        """Broadcast serialized bytes and deserialize.
+
+        For MPI backend, both writer and readers participate in broadcast.
+        Each read() call triggers a new broadcast operation.
+        - Writer broadcasts serialized bytes
+        - Readers receive bytes and deserialize
+        """
+        if not self._comm:
+            raise RuntimeError("Backend not initialized")
+
+        # Collective broadcast: all ranks participate
+        if self._is_writer:
+            # Writer broadcasts the serialized data
+            _ = self._comm.bcast(self._serialized_data, root=0)
+            # Writer returns None (doesn't read its own data)
+            return None
+        else:
+            # Readers receive the broadcast bytes
+            serialized = self._comm.bcast(None, root=0)
+            if serialized is None:
+                return None
+            # Deserialize using same method as other backends
+            return deserialize(serialized)
+
+    def cleanup(self) -> None:
+        """Clean up resources.
+
+        MPI communicator is managed by MPI runtime, so we just clear references.
+        """
+        self._comm = None
+        self._serialized_data = None
+        logger.info("MPI backend cleaned up")
+
+    def get_name(self) -> str:
+        return "MPI-Native"
